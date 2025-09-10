@@ -60,6 +60,11 @@ namespace CryptoDashboard.Controllers
                     sortColumn,
                     sortOrder
                 );
+                if (result.Count == 1 && result[0].Price == 0)
+                {
+                    return NotFound(new { message = "Seçilen aralıkta veri bulunamadı." });
+                }
+
 
                 return Ok(result);
             }
