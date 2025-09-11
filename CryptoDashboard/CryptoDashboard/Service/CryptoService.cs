@@ -11,20 +11,21 @@ namespace CryptoDashboard.Services
         {
             _connectionString = config.GetConnectionString("DefaultConnection");
         }
-        public List<CryptoDataModel> GetCryptoDataFiltered
- (
-   string coinName,
-   string? period = null,
-   decimal? minPrice = null,
-   decimal? maxPrice = null,
-   string? sortColumn = null,
-   string? sortOrder = null
+        public List<CryptoDataModel> GetCryptoDataFiltered(
+     string coinName,
+     string? period = null,
+     DateTime? startDate = null,
+     DateTime? endDate = null,
+     decimal? minPrice = null,
+     decimal? maxPrice = null,
+     string? sortColumn = null,
+     string? sortOrder = null
  )
         {
             var list = new List<CryptoDataModel>();
 
-            DateTime endDate = DateTime.Now.Date;
-
+           
+            DateTime endDateParam = endDate ?? DateTime.Now.Date;
             int days = period switch
             {
                 "7" => 7,
@@ -32,8 +33,7 @@ namespace CryptoDashboard.Services
                 "90" => 90,
                 _ => 30
             };
-
-            DateTime startDate = endDate.AddDays(-days);
+            DateTime startDateParam = startDate ?? endDateParam.AddDays(-days);
 
             using (var conn = new NpgsqlConnection(_connectionString))
             {
@@ -51,7 +51,6 @@ namespace CryptoDashboard.Services
                 if (maxPrice.HasValue)
                     query += " AND \"Price\" <= @maxPrice";
 
-                // --- Sıralama kontrolü ---
                 var allowedColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             { "price", "\"Price\"" },
@@ -61,18 +60,21 @@ namespace CryptoDashboard.Services
             { "vol", "\"Vol\"" }
         };
 
-                string sortCol = allowedColumns.ContainsKey(sortColumn ?? "")
-                    ? allowedColumns[sortColumn!]
-                    : "\"Date\"";
-
+                string sortCol = allowedColumns.ContainsKey(sortColumn ?? "") ? allowedColumns[sortColumn!] : "\"Date\"";
                 string sortDir = sortOrder?.ToLower() == "desc" ? "DESC" : "ASC";
                 query += $" ORDER BY {sortCol} {sortDir};";
 
                 using (var cmd = new NpgsqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("coin", coinName);
-                    cmd.Parameters.AddWithValue("start", startDate);
-                    cmd.Parameters.AddWithValue("end", endDate);
+                    DateTime? startParam = startDateParam; 
+                    DateTime? endParam = endDateParam;
+
+                    cmd.Parameters.AddWithValue("start", startParam.HasValue ? (object)startParam.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("end", endParam.HasValue ? (object)endParam.Value : DBNull.Value);
+
+
+
                     if (minPrice.HasValue) cmd.Parameters.AddWithValue("minPrice", minPrice.Value);
                     if (maxPrice.HasValue) cmd.Parameters.AddWithValue("maxPrice", maxPrice.Value);
 
@@ -94,23 +96,6 @@ namespace CryptoDashboard.Services
                         }
                     }
                 }
-            }
-            if (list.Count == 0)
-            {
-                return new List<CryptoDataModel>
-        {
-            new CryptoDataModel
-            {
-                CoinName = coinName,
-                Date = DateTime.Now,
-                Price = 0,
-                Open = 0,
-                High = 0,
-                Low = 0,
-                Vol = 0,
-                Change_percent = 0
-            }
-        };
             }
 
             return list;
