@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using CryptoDashboard.Services;
 using System;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CryptoDashboard.Controllers
 {
@@ -79,6 +82,14 @@ public IActionResult GetDataFiltered(
             stack = ex.StackTrace
         });
     }
+            //if (period == "weekly")
+            //{
+                
+            //}
+
+
+
+
 }
 
 

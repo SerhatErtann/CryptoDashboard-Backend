@@ -1,5 +1,7 @@
 ﻿using Npgsql;
+using System.Diagnostics.Tracing;
 using static CryptoDashboard.Model.CryptoPrice;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace CryptoDashboard.Services
 {
@@ -12,29 +14,51 @@ namespace CryptoDashboard.Services
             _connectionString = config.GetConnectionString("DefaultConnection");
         }
         public List<CryptoDataModel> GetCryptoDataFiltered(
-     string coinName,
-     string? period = null,
-     DateTime? startDate = null,
-     DateTime? endDate = null,
-     decimal? minPrice = null,
-     decimal? maxPrice = null,
-     string? sortColumn = null,
-     string? sortOrder = null
+
+
+           
+
+
+
+            string coinName,
+            string? period = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            decimal? minPrice = null,
+            decimal? maxPrice = null,
+            string? sortColumn = null,
+            string? sortOrder = null,
+            string Day=null,// enum kullanılacak
+            string Weekly = null,
+            string Monthly = null
  )
         {
             var list = new List<CryptoDataModel>();
 
-           
+            string DaysCaunt = period switch
+            {
+                "Weekly " => Weekly,
+                "Monthly " => Monthly,
+                _ => Day
+            };
+            string querys = @" 
+            SELECT ""Date"", ""Price"", ""Open"", ""High"", ""Low"", ""Vol"", ""Change_percent"", ""CoinName""
+            FROM ""CryptoPrice""WHERE LOWER(""CoinName"") =LOWER(@coin) AND @end GROUP BY date_trunch('{GROUP BY}',""DATE""),
+            ""coinname"" ORDER BY ""DATE""
+            ";
+          
+
             DateTime endDateParam = endDate ?? DateTime.Now.Date;
             int days = period switch
             {
+                "1 " =>1,
                 "7" => 7,
                 "30" => 30,
                 "90" => 90,
                 _ => 30
             };
-            DateTime startDateParam = startDate ?? endDateParam.AddDays(-days);
 
+            DateTime startDateParam = startDate ?? endDateParam.AddDays(-days);
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 conn.Open();
