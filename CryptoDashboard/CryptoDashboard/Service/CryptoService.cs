@@ -14,90 +14,64 @@ namespace CryptoDashboard.Services
             _connectionString = config.GetConnectionString("DefaultConnection");
         }
         public List<CryptoDataModel> GetCryptoDataFiltered(
-
-
-           
-
-
-
-            string coinName,
-            string? period = null,
-            DateTime? startDate = null,
-            DateTime? endDate = null,
-            decimal? minPrice = null,
-            decimal? maxPrice = null,
-            string? sortColumn = null,
-            string? sortOrder = null,
-            string Day=null,// enum kullanılacak
-            string Weekly = null,
-            string Monthly = null
- )
+           string coinName,
+           string? period = null,   
+           int? range = null,     
+           DateTime? startDate = null,
+           DateTime? endDate = null,
+           decimal? minPrice = null,
+           decimal? maxPrice = null,
+           string? sortColumn = null,
+           string? sortOrder = null
+)
         {
             var list = new List<CryptoDataModel>();
 
-            string DaysCaunt = period switch
+           
+            string groupBy = period?.Trim().ToLower() switch
             {
-                "Weekly " => Weekly,
-                "Monthly " => Monthly,
-                _ => Day
-            };
-            string querys = @" 
-            SELECT ""Date"", ""Price"", ""Open"", ""High"", ""Low"", ""Vol"", ""Change_percent"", ""CoinName""
-            FROM ""CryptoPrice""WHERE LOWER(""CoinName"") =LOWER(@coin) AND @end GROUP BY date_trunch('{GROUP BY}',""DATE""),
-            ""coinname"" ORDER BY ""DATE""
-            ";
-          
-
-            DateTime endDateParam = endDate ?? DateTime.Now.Date;
-            int days = period switch
-            {
-                "1 " =>1,
-                "7" => 7,
-                "30" => 30,
-                "90" => 90,
-                _ => 30
+                "weekly" => "week",
+                "monthly" => "month",
+                "daily" => "day",
+                _ => "day"
             };
 
-            DateTime startDateParam = startDate ?? endDateParam.AddDays(-days);
+            
+            DateTime endDateParam = (endDate ?? DateTime.Now).Date;
+            int days = range ?? 30;
+            DateTime startDateParam = (startDate ?? endDateParam.AddDays(-days)).Date;
+
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 conn.Open();
 
-                string query = @"
-            SELECT ""Date"", ""Price"", ""Open"", ""High"", ""Low"", ""Vol"", ""Change_percent"", ""CoinName""
+                string query = $@"
+            SELECT date_trunc('{groupBy}', ""Date"") AS ""Date"",
+                   AVG(""Price"") AS ""Price"",
+                   AVG(""Open"") AS ""Open"",
+                   AVG(""High"") AS ""High"",
+                   AVG(""Low"") AS ""Low"",
+                   SUM(""Vol"") AS ""Vol"",
+                   AVG(""Change_percent"") AS ""Change_percent"",
+                   ""CoinName""
             FROM ""CryptoPrice""
             WHERE LOWER(""CoinName"") LIKE LOWER(@coin || '%')
-              AND ""Date"" BETWEEN @start AND @end
-        ";
+              AND ""Date"" BETWEEN @start AND @end";
 
                 if (minPrice.HasValue)
                     query += " AND \"Price\" >= @minPrice";
                 if (maxPrice.HasValue)
                     query += " AND \"Price\" <= @maxPrice";
 
-                var allowedColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
-        {
-            { "price", "\"Price\"" },
-            { "date", "\"Date\"" },
-            { "high", "\"High\"" },
-            { "low", "\"Low\"" },
-            { "vol", "\"Vol\"" }
-        };
-
-                string sortCol = allowedColumns.ContainsKey(sortColumn ?? "") ? allowedColumns[sortColumn!] : "\"Date\"";
-                string sortDir = sortOrder?.ToLower() == "desc" ? "DESC" : "ASC";
-                query += $" ORDER BY {sortCol} {sortDir};";
+                query += $@"
+            GROUP BY date_trunc('{groupBy}', ""Date""), ""CoinName""
+            ORDER BY date_trunc('{groupBy}', ""Date"");";
 
                 using (var cmd = new NpgsqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("coin", coinName);
-                    DateTime? startParam = startDateParam; 
-                    DateTime? endParam = endDateParam;
-
-                    cmd.Parameters.AddWithValue("start", startParam.HasValue ? (object)startParam.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("end", endParam.HasValue ? (object)endParam.Value : DBNull.Value);
-
-
+                    cmd.Parameters.AddWithValue("start", startDateParam);
+                    cmd.Parameters.AddWithValue("end", endDateParam);
 
                     if (minPrice.HasValue) cmd.Parameters.AddWithValue("minPrice", minPrice.Value);
                     if (maxPrice.HasValue) cmd.Parameters.AddWithValue("maxPrice", maxPrice.Value);
@@ -124,7 +98,6 @@ namespace CryptoDashboard.Services
 
             return list;
         }
-
 
 
         public List<CryptoDataModel> GetCryptoData(string coinName, DateTime startDate, DateTime endDate)

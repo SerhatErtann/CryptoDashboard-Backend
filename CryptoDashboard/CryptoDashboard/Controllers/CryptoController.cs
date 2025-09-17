@@ -48,9 +48,11 @@ public IActionResult GetDataFiltered(
     [FromQuery] decimal? minPrice = null,
     [FromQuery] decimal? maxPrice = null,
     [FromQuery] string? sortColumn = null,
-    [FromQuery] string? sortOrder = null
+    [FromQuery] string? sortOrder = null,
+        [FromQuery] int? range = null
+
 )
-{
+        {
     try
     {
         if (string.IsNullOrWhiteSpace(coinName))
@@ -59,6 +61,7 @@ public IActionResult GetDataFiltered(
         var result = _service.GetCryptoDataFiltered(
             coinName,
             period,
+            range,
             startDate,
             endDate,
             minPrice,
