@@ -13,7 +13,17 @@ namespace CryptoDashboard.Services
         {
             _connectionString = config.GetConnectionString("DefaultConnection");
         }
+
+        enum Parametres
+        {
+            coinName, period, range, startDate,endDate, minPrice, maxPrice, sortColumn, sortOrder
+        }
+        
         public List<CryptoDataModel> GetCryptoDataFiltered(
+
+            //Parametres parametre = Parametres.range,
+
+
            string coinName,
            string? period = null,   
            int? range = null,     
@@ -98,7 +108,7 @@ namespace CryptoDashboard.Services
 
             return list;
         }
-
+     
 
         public List<CryptoDataModel> GetCryptoData(string coinName, DateTime startDate, DateTime endDate)
         {
