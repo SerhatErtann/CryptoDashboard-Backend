@@ -35,7 +35,7 @@ namespace CryptoDashboard.Services
                 CryptoService.Period.weekly =>"week",
                 CryptoService.Period.monthly => "month",
                 CryptoService.Period.daily => "day" ,
-                _ => "day"
+                  _ => "day"
             };
 
             DateTime endDateParam = (cryptoDataRequest.endDate ?? DateTime.Now).Date;

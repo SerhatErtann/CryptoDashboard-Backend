@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CryptoDashboard.Model;
 using CryptoDashboard.Services;
-using System;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 
 namespace CryptoDashboard.Controllers
 {
@@ -39,61 +40,38 @@ namespace CryptoDashboard.Controllers
                 });
             }
         }
-       [HttpGet("DataFiltered")]
-public IActionResult GetDataFiltered(
-    [FromQuery] string coinName,
-    [FromQuery] string? period = null,
-    [FromQuery] DateTime? startDate = null,
-    [FromQuery] DateTime? endDate = null,
-    [FromQuery] decimal? minPrice = null,
-    [FromQuery] decimal? maxPrice = null,
-    [FromQuery] string? sortColumn = null,
-    [FromQuery] string? sortOrder = null,
-        [FromQuery] int? range = null
 
-)
+
+
+
+        [HttpGet("DataFiltered")]
+        public IActionResult GetDataFiltered([FromQuery] CryptoDataRequest request)
         {
-    try
-    {
-        if (string.IsNullOrWhiteSpace(coinName))
-            return BadRequest("Coin name is required.");
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.CoinName))
+                    return BadRequest("Coin name is required.");
 
-        var result = _service.GetCryptoDataFiltered(
-            coinName,
-            period,
-            range,
-            startDate,
-            endDate,
-            minPrice,
-            maxPrice,
-            sortColumn,
-            sortOrder
-        );
+                var result = _service.GetCryptoDataFiltered(request);
 
-        if (result.Count == 0)
-        {
-            return NotFound(new { message = "Seçilen aralıkta veri bulunamadı." });
+                if (result.Count == 0)
+                {
+                    return NotFound(new { message = "Seçilen aralıkta veri bulunamadı." });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = ex.Message,
+                    stack = ex.StackTrace
+                });
+            }
         }
 
-        return Ok(result);
-    }
-    catch (Exception ex)
-    {
-        return StatusCode(500, new
-        {
-            message = ex.Message,
-            stack = ex.StackTrace
-        });
-    }
-            //if (period == "weekly")
-            //{
-                
-            //}
 
-
-
-
-}
 
 
         [HttpGet("Stats")]
