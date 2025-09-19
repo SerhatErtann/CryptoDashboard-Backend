@@ -1,4 +1,5 @@
-﻿using Npgsql;
+﻿using CryptoDashboard.Model;
+using Npgsql;
 using System.Diagnostics.Tracing;
 using static CryptoDashboard.Model.CryptoPrice;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -14,42 +15,32 @@ namespace CryptoDashboard.Services
             _connectionString = config.GetConnectionString("DefaultConnection");
         }
 
-        enum Parametres
+        public enum Period
         {
-            coinName, period, range, startDate,endDate, minPrice, maxPrice, sortColumn, sortOrder
+            weekly, 
+            monthly,
+            daily 
         }
-        
+
         public List<CryptoDataModel> GetCryptoDataFiltered(
 
-            //Parametres parametre = Parametres.range,
-
-
-           string coinName,
-           string? period = null,   
-           int? range = null,     
-           DateTime? startDate = null,
-           DateTime? endDate = null,
-           decimal? minPrice = null,
-           decimal? maxPrice = null,
-           string? sortColumn = null,
-           string? sortOrder = null
+            CryptoDataRequest cryptoDataRequest 
 )
         {
             var list = new List<CryptoDataModel>();
-
            
-            string groupBy = period?.Trim().ToLower() switch
+            string groupBy = cryptoDataRequest.Period switch
             {
-                "weekly" => "week",
-                "monthly" => "month",
-                "daily" => "day",
+
+                CryptoService.Period.weekly =>"week",
+                CryptoService.Period.monthly => "month",
+                CryptoService.Period.daily => "day" ,
                 _ => "day"
             };
 
-            
-            DateTime endDateParam = (endDate ?? DateTime.Now).Date;
-            int days = range ?? 30;
-            DateTime startDateParam = (startDate ?? endDateParam.AddDays(-days)).Date;
+            DateTime endDateParam = (cryptoDataRequest.endDate ?? DateTime.Now).Date;
+            int days = cryptoDataRequest.range ?? 30;
+            DateTime startDateParam = (cryptoDataRequest.startDate ?? endDateParam.AddDays(-days)).Date;
 
             using (var conn = new NpgsqlConnection(_connectionString))
             {
@@ -68,9 +59,9 @@ namespace CryptoDashboard.Services
             WHERE LOWER(""CoinName"") LIKE LOWER(@coin || '%')
               AND ""Date"" BETWEEN @start AND @end";
 
-                if (minPrice.HasValue)
+                if (cryptoDataRequest.minPrice.HasValue)
                     query += " AND \"Price\" >= @minPrice";
-                if (maxPrice.HasValue)
+                if (cryptoDataRequest.maxPrice.HasValue)
                     query += " AND \"Price\" <= @maxPrice";
 
                 query += $@"
@@ -79,12 +70,12 @@ namespace CryptoDashboard.Services
 
                 using (var cmd = new NpgsqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("coin", coinName);
+                    cmd.Parameters.AddWithValue("coin", cryptoDataRequest.CoinName);
                     cmd.Parameters.AddWithValue("start", startDateParam);
                     cmd.Parameters.AddWithValue("end", endDateParam);
 
-                    if (minPrice.HasValue) cmd.Parameters.AddWithValue("minPrice", minPrice.Value);
-                    if (maxPrice.HasValue) cmd.Parameters.AddWithValue("maxPrice", maxPrice.Value);
+                    if (cryptoDataRequest.maxPrice.HasValue) cmd.Parameters.AddWithValue("minPrice", cryptoDataRequest.minPrice.Value);
+                    if (cryptoDataRequest.maxPrice.HasValue) cmd.Parameters.AddWithValue("maxPrice", cryptoDataRequest.maxPrice.Value);
 
                     using (var reader = cmd.ExecuteReader())
                     {
@@ -109,7 +100,6 @@ namespace CryptoDashboard.Services
             return list;
         }
      
-
         public List<CryptoDataModel> GetCryptoData(string coinName, DateTime startDate, DateTime endDate)
         {
             var list = new List<CryptoDataModel>();
@@ -152,7 +142,6 @@ namespace CryptoDashboard.Services
             }
             return list;
         }
-       
 
         public object GetCryptoStats(DateTime startDate, DateTime endDate)
         {
