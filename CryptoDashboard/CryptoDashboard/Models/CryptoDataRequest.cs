@@ -1,12 +1,13 @@
-﻿using CryptoDashboard.Services;
+﻿using CryptoDashboard.Enums;
+using CryptoDashboard.Services;
 
-namespace CryptoDashboard.Model
+namespace CryptoDashboard.Models
 {
     public class CryptoDataRequest
     {
      
         public string? CoinName { get; set; }
-        public CryptoService.Period? Period { get; set; }
+        public PeriodType? Period { get; set; }
         public int? range { get; set; }
         public DateTime? startDate { get; set; }
         public DateTime? endDate { get; set; }

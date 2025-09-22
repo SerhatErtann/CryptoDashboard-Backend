@@ -1,4 +1,4 @@
-﻿using CryptoDashboard.Model;
+﻿using CryptoDashboard.Models;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 
@@ -11,16 +11,32 @@ namespace CryptoDashboard.Services
         public MongoDbService(IConfiguration configuration)
         {
             var settings = configuration.GetSection("MongoSettings");
-            var client = new MongoClient(settings["ConnectionString"]);
-            var database = client.GetDatabase(settings["Database"]);
-            _collection = database.GetCollection<DateRangeLog>(settings["DateRangeCollection"]);
+
+           
+            var connectionString = settings.GetValue<string>("ConnectionString");
+            var databaseName = settings.GetValue<string>("Database");
+            var collectionName = settings.GetValue<string>("DateRangeCollection");
+
+            
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new Exception("Mongo connection string is null! Check appsettings.json");
+
+            if (string.IsNullOrWhiteSpace(databaseName))
+                throw new Exception("Mongo database name is null! Check appsettings.json");
+
+            if (string.IsNullOrWhiteSpace(collectionName))
+                throw new Exception("Mongo collection name is null! Check appsettings.json");
+
+            var client = new MongoClient(connectionString);
+            var database = client.GetDatabase(databaseName);
+            _collection = database.GetCollection<DateRangeLog>(collectionName);
         }
 
         public void LogDateRange(DateTime beginDate, DateTime endDate)
         {
             var log = new DateRangeLog
             {
-                Id = Guid.NewGuid().ToString(),
+                Id = Guid.NewGuid(),
                 BeginDate = beginDate,
                 EndDate = endDate,
                 RequestDate = DateTime.UtcNow

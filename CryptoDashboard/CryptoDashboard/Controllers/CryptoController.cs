@@ -1,10 +1,12 @@
-﻿using CryptoDashboard.Model;
+﻿using CryptoDashboard.Models;
 using CryptoDashboard.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using System;
+using CryptoDashboard.Constant;
+
 
 namespace CryptoDashboard.Controllers
 {
@@ -22,7 +24,7 @@ namespace CryptoDashboard.Controllers
             _mongoService = mongoService;
         }
 
-        [HttpGet("Data")]
+        [HttpGet(Endpoints.CryptoDashboard.Data)]
         public IActionResult GetData(string coinName, DateTime startDate, DateTime endDate)
         {
             try
@@ -44,22 +46,22 @@ namespace CryptoDashboard.Controllers
 
 
 
-        [HttpGet("DataFiltered")]
-        public IActionResult GetDataFiltered([FromQuery] CryptoDataRequest request)
+        [HttpGet(Endpoints.CryptoDashboard.DataFiltered)]
+        public async Task<IActionResult> GetDataFiltered([FromQuery] CryptoDataRequest request)
         {
             try
             {
                 if (string.IsNullOrWhiteSpace(request.CoinName))
                     return BadRequest("Coin name is required.");
 
-                var result = _service.GetCryptoDataFiltered(request);
+                var cryptoResult = await _service.GetCryptoDataFiltered(request);
 
-                if (result.Count == 0)
+                if (cryptoResult.Count == 0)
                 {
                     return NotFound(new { message = "Seçilen aralıkta veri bulunamadı." });
                 }
 
-                return Ok(result);
+                return Ok(cryptoResult);
             }
             catch (Exception ex)
             {
@@ -74,7 +76,7 @@ namespace CryptoDashboard.Controllers
 
 
 
-        [HttpGet("Stats")]
+        [HttpGet(Endpoints.CryptoDashboard.Stats)]
         public IActionResult GetStats(DateTime startDate, DateTime endDate)
         {
             var result = _service.GetCryptoStats(startDate, endDate);

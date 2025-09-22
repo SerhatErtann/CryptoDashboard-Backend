@@ -1,8 +1,8 @@
-﻿namespace CryptoDashboard.Model
+﻿namespace CryptoDashboard.Models
 {
     public class DateRangeLog
     {
-        public string? Id { get; set; }     
+        public Guid Id { get; set; }     
         public DateTime BeginDate { get; set; }
         public DateTime EndDate { get; set; }
         public DateTime RequestDate { get; set; }
