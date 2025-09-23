@@ -5,7 +5,6 @@ namespace CryptoDashboard.Models
 {
     public class CryptoDataRequest
     {
-     
         public string? CoinName { get; set; }
         public PeriodType? Period { get; set; }
         public int? range { get; set; }
@@ -16,5 +15,14 @@ namespace CryptoDashboard.Models
         public string? sortColumn { get; set; }
         public string? sortOrder { get; set; }
 
+        public DateTime? StartDateUtc =>
+            startDate.HasValue
+                ? DateTime.SpecifyKind(startDate.Value, DateTimeKind.Utc)
+                : null;
+
+        public DateTime? EndDateUtc =>
+            endDate.HasValue
+                ? DateTime.SpecifyKind(endDate.Value, DateTimeKind.Utc)
+                : null;
     }
 }

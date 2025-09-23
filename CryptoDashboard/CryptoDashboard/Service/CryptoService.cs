@@ -4,6 +4,7 @@ using CryptoDashboard.Enums;
 using CryptoDashboard.Models;
 using Microsoft.EntityFrameworkCore;
 using Npgsql.EntityFrameworkCore.PostgreSQL;
+using System;
 using static CryptoDashboard.Models.CryptoPrice;
 
 namespace CryptoDashboard.Services
@@ -22,21 +23,23 @@ namespace CryptoDashboard.Services
         public async Task<List<CryptoDataModel>> GetCryptoDataFiltered(CryptoDataRequest request)
         {
                
-
             try
             {
                 if (string.IsNullOrWhiteSpace(request.CoinName))
                     throw new ArgumentException($"{nameof(request.CoinName)} cannot be empty.");
 
-                DateTime endDate = (request.endDate ?? DateTime.UtcNow).Date;
-                int range = request.range ?? 30; 
-                DateTime startDate = (request.startDate ?? endDate.AddDays(-range)).Date;
+                var endDate = request.endDate?.ToUniversalTime() ?? DateTime.UtcNow;
+                int range = request.range ?? 30;
+                var startDate = request.startDate?.ToUniversalTime() ?? DateTime.UtcNow.AddDays(-range);
+
 
                 var query = _context.CryptoPrice
-                    .Where(cp =>
-                        cp.CoinName.ToLower().StartsWith(request.CoinName.ToLower()) &&
-                        cp.Date >= startDate &&
-                        cp.Date <= endDate);
+                .Where(cp =>
+                    cp.CoinName.ToLower().StartsWith(request.CoinName.ToLower()) &&
+                    cp.Date >= startDate &&
+                    cp.Date <= endDate);
+              
+
 
                 if (request.minPrice.HasValue)
                     query = query.Where(cp => cp.Price >= request.minPrice.Value);
@@ -45,17 +48,22 @@ namespace CryptoDashboard.Services
                     query = query.Where(cp => cp.Price <= request.maxPrice.Value);
 
                 var list = await query.ToListAsync();
+                list.ForEach(x => x.Date = DateTime.SpecifyKind(x.Date, DateTimeKind.Utc));
+
+
 
                 var grouped = list
-                    .GroupBy(cp => request.Period switch
-                    {
-                        PeriodType.Weekly => FirstDateOfWeek(cp.Date),
-                        PeriodType.Monthly => new DateTime(cp.Date.Year, cp.Date.Month, 1),
-                        _ => cp.Date.Date 
-                    })
+                  .GroupBy(cp => request.Period switch
+                  {
+                      PeriodType.Weekly => FirstDateOfWeek(cp.Date), 
+                      PeriodType.Monthly => new DateTime(cp.Date.Year, cp.Date.Month, 1, cp.Date.Hour, cp.Date.Minute, cp.Date.Second, DateTimeKind.Utc),
+                      _ => cp.Date
+                  })
+
+
                     .Select(g => new CryptoDataModel
                     {
-                        Date = g.Key.ToUniversalTime(),
+                        Date = g.Key,
                         Price = g.Average(x => x.Price),
                         Open = g.Average(x => x.Open),
                         High = g.Average(x => x.High),
@@ -75,8 +83,6 @@ namespace CryptoDashboard.Services
                 return new List<CryptoDataModel>();
             }
         }
-
-
 
         public async Task<List<CryptoDataModel>> GetCryptoData(string coinName, DateTime startDate, DateTime endDate)
         {

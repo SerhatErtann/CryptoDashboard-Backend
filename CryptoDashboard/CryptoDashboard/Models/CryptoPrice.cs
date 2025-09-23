@@ -7,15 +7,15 @@ namespace CryptoDashboard.Models
     public class CryptoPrice
     {
         [Column("SNo")]
-        public int SNo { get; set; } // prımary key
+        public int SNo { get; set; } 
 
         [Column("CoinName")]
         public string CoinName { get; set; } = string.Empty;
 
 
-        [Column(TypeName = "timestamp without time zone")]
-       
+        [Column(TypeName = "timestamp with time zone")]
         public DateTime Date { get; set; }
+
 
         [Column("Price")]
         public decimal Price { get; set; }
