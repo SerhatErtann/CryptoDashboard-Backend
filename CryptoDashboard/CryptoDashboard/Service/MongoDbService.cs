@@ -1,4 +1,5 @@
-﻿using CryptoDashboard.Models;
+﻿using CryptoDashboard.Constant;
+using CryptoDashboard.Models;
 using Microsoft.Extensions.Configuration;
 using MongoDB.Driver;
 
@@ -10,22 +11,21 @@ namespace CryptoDashboard.Services
 
         public MongoDbService(IConfiguration configuration)
         {
-            var settings = configuration.GetSection("MongoSettings");
+            IConfigurationSection settings = configuration.GetSection("MongoSettings");
 
-           
-            var connectionString = settings.GetValue<string>("ConnectionString");
-            var databaseName = settings.GetValue<string>("Database");
-            var collectionName = settings.GetValue<string>("DateRangeCollection");
+            string? connectionString = settings.GetValue<string>("ConnectionString");
+            string? databaseName = settings.GetValue<string>("Database");
+            string? collectionName = settings.GetValue<string>("DateRangeCollection");
 
-            
             if (string.IsNullOrWhiteSpace(connectionString))
-                throw new Exception("Mongo connection string is null! Check appsettings.json");
+
+                throw new Exception( GlobalConstants.Config);
 
             if (string.IsNullOrWhiteSpace(databaseName))
-                throw new Exception("Mongo database name is null! Check appsettings.json");
+                throw new Exception(GlobalConstants.MongoDatabase );
 
             if (string.IsNullOrWhiteSpace(collectionName))
-                throw new Exception("Mongo collection name is null! Check appsettings.json");
+                throw new Exception(GlobalConstants.MongoCollection);
 
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase(databaseName);

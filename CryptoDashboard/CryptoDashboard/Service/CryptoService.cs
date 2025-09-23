@@ -21,21 +21,26 @@ namespace CryptoDashboard.Services
 
         public async Task<List<CryptoDataModel>> GetCryptoDataFiltered(CryptoDataRequest request)
         {
+               
+
             try
             {
                 if (string.IsNullOrWhiteSpace(request.CoinName))
-                    throw new ArgumentException("CoinName boş olamaz.");
+                    throw new ArgumentException($"{nameof(request.CoinName)} cannot be empty.");
 
                 DateTime endDate = (request.endDate ?? DateTime.UtcNow).Date;
-                int range = request.range ?? 30;
+                int range = request.range ?? 30; 
                 DateTime startDate = (request.startDate ?? endDate.AddDays(-range)).Date;
 
                 var query = _context.CryptoPrice
-                    .Where(cp => cp.CoinName.ToLower().StartsWith(request.CoinName.ToLower()) &&
-                                 cp.Date >= startDate && cp.Date <= endDate);
+                    .Where(cp =>
+                        cp.CoinName.ToLower().StartsWith(request.CoinName.ToLower()) &&
+                        cp.Date >= startDate &&
+                        cp.Date <= endDate);
 
                 if (request.minPrice.HasValue)
                     query = query.Where(cp => cp.Price >= request.minPrice.Value);
+
                 if (request.maxPrice.HasValue)
                     query = query.Where(cp => cp.Price <= request.maxPrice.Value);
 
@@ -44,19 +49,19 @@ namespace CryptoDashboard.Services
                 var grouped = list
                     .GroupBy(cp => request.Period switch
                     {
-                        PeriodType.weekly => FirstDateOfWeek(cp.Date),
-                        PeriodType.monthly => new DateTime(cp.Date.Year, cp.Date.Month, 1),
-                        _ => cp.Date.Date
+                        PeriodType.Weekly => FirstDateOfWeek(cp.Date),
+                        PeriodType.Monthly => new DateTime(cp.Date.Year, cp.Date.Month, 1),
+                        _ => cp.Date.Date 
                     })
                     .Select(g => new CryptoDataModel
                     {
-                        Date = g.Key,
+                        Date = g.Key.ToUniversalTime(),
                         Price = g.Average(x => x.Price),
                         Open = g.Average(x => x.Open),
                         High = g.Average(x => x.High),
                         Low = g.Average(x => x.Low),
                         Vol = g.Sum(x => x.Vol),
-                        Change_percent = g.Average(x => x.Change_percent),
+                        Change_percent = g.Average(x => x.ChangePercent), 
                         CoinName = g.First().CoinName
                     })
                     .OrderBy(x => x.Date)
@@ -66,12 +71,12 @@ namespace CryptoDashboard.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"GetCryptoDataFiltered Hata: {ex.Message}");
+                Console.WriteLine($"{nameof(GetCryptoDataFiltered)} error: {ex.Message}");
                 return new List<CryptoDataModel>();
             }
         }
 
-       
+
 
         public async Task<List<CryptoDataModel>> GetCryptoData(string coinName, DateTime startDate, DateTime endDate)
         {
@@ -92,14 +97,14 @@ namespace CryptoDashboard.Services
                         High = cp.High,
                         Low = cp.Low,
                         Vol = cp.Vol,
-                        Change_percent = cp.Change_percent,
+                        Change_percent = cp.ChangePercent,
                         CoinName = cp.CoinName
                     })
                     .ToListAsync();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"GetCryptoData Hata: {ex.Message}");
+                Console.WriteLine($"{nameof(GetCryptoData)} mistake: {ex.Message}");
                 return new List<CryptoDataModel>();
             }
         }
@@ -126,7 +131,7 @@ namespace CryptoDashboard.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"GetCryptoStats Hata: {ex.Message}");
+                Console.WriteLine($"{nameof(GetCryptoStats)} mistake: {ex.Message}");
                 return null;
             }
         }

@@ -10,6 +10,12 @@ namespace CryptoDashboard.DbContexts
             : base(options)
         { }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<CryptoPrice>()
+                .HasKey(c => c.SNo);   
+        }
+
         public DbSet<CryptoPrice> CryptoPrice { get; set; }
     }
 }

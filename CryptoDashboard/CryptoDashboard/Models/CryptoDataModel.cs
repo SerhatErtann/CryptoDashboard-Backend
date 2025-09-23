@@ -1,7 +1,10 @@
-﻿namespace CryptoDashboard.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CryptoDashboard.Models
 {
     public class CryptoDataModel
     {
+        public decimal SNo { get; set; }
         public DateTime Date { get; set; }
         public decimal Price { get; set; }
         public decimal Open { get; set; }

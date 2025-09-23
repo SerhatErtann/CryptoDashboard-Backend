@@ -54,11 +54,11 @@ namespace CryptoDashboard.Controllers
                 if (string.IsNullOrWhiteSpace(request.CoinName))
                     return BadRequest("Coin name is required.");
 
-                var cryptoResult = await _service.GetCryptoDataFiltered(request);
+                List<CryptoDataModel> cryptoResult = await _service.GetCryptoDataFiltered(request);
 
                 if (cryptoResult.Count == 0)
                 {
-                    return NotFound(new { message = "Seçilen aralıkta veri bulunamadı." });
+                    return NotFound(new { message = "No data found in the selected range." });
                 }
 
                 return Ok(cryptoResult);

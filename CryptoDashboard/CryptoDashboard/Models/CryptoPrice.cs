@@ -6,30 +6,33 @@ namespace CryptoDashboard.Models
     [Table("CryptoPrice")] 
     public class CryptoPrice
     {
-        //public int Id { get; set; }
+        [Column("SNo")]
+        public int SNo { get; set; } // prımary key
 
-        [Column("coinname")]
+        [Column("CoinName")]
         public string CoinName { get; set; } = string.Empty;
 
-        [Column("date")]
+
+        [Column(TypeName = "timestamp without time zone")]
+       
         public DateTime Date { get; set; }
 
-        [Column("price")]
+        [Column("Price")]
         public decimal Price { get; set; }
 
-        [Column("open")]
+        [Column("Open")]
         public decimal Open { get; set; }
 
-        [Column("high")]
+        [Column("High")]
         public decimal High { get; set; }
 
-        [Column("low")]
+        [Column("Low")]
         public decimal Low { get; set; }
 
-        [Column("vol")]
+        [Column("Vol")]
         public decimal Vol { get; set; }
 
-        [Column("change_percent")]
-        public decimal Change_percent { get; set; }
+        [Column("Change_percent")]
+        public decimal ChangePercent { get; set; }
     }
 }

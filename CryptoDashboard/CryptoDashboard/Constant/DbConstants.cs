@@ -4,7 +4,7 @@
     {
         public const string DefaultConnectionName = "DefaultConnection";
         public const string MongoConnectionString = "MongoConnectionString";
-        public const string MongoDatabase = "MongoDatabase";
+        public const string MongoDatabase = "Database";
         public const string MongoDateRangeCollection = "DateRangeCollection";
 
     }
