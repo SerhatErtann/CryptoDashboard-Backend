@@ -25,11 +25,11 @@ namespace CryptoDashboard.Controllers
         }
 
         [HttpGet(Endpoints.CryptoDashboard.Data)]
-        public IActionResult GetData(string coinName, DateTime startDate, DateTime endDate)
+        public IActionResult GetData(string CoinName, DateTime startDate, DateTime endDate)
         {
             try
             {
-                var result = _service.GetCryptoData(coinName, startDate, endDate);
+                var result = _service.GetCryptoData(CoinName, startDate, endDate);
                 _mongoService.LogDateRange(startDate, endDate);
                 return Ok(result);
             }
@@ -42,8 +42,6 @@ namespace CryptoDashboard.Controllers
                 });
             }
         }
-
-
 
 
         [HttpGet(Endpoints.CryptoDashboard.DataFiltered)]

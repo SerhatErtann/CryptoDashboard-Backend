@@ -30,8 +30,7 @@ namespace CryptoDashboard.Services
 
                 var endDate = request.endDate?.ToUniversalTime() ?? DateTime.UtcNow;
                 int range = request.range ?? 30;
-                var startDate = request.startDate?.ToUniversalTime() ?? DateTime.UtcNow.AddDays(-range);
-
+                var startDate = request.startDate?.ToUniversalTime() ?? endDate.AddDays(-range);
 
                 var query = _context.CryptoPrice
                 .Where(cp =>
@@ -39,7 +38,6 @@ namespace CryptoDashboard.Services
                     cp.Date >= startDate &&
                     cp.Date <= endDate);
               
-
 
                 if (request.minPrice.HasValue)
                     query = query.Where(cp => cp.Price >= request.minPrice.Value);
@@ -50,8 +48,6 @@ namespace CryptoDashboard.Services
                 var list = await query.ToListAsync();
                 list.ForEach(x => x.Date = DateTime.SpecifyKind(x.Date, DateTimeKind.Utc));
 
-
-
                 var grouped = list
                   .GroupBy(cp => request.Period switch
                   {
@@ -59,7 +55,6 @@ namespace CryptoDashboard.Services
                       PeriodType.Monthly => new DateTime(cp.Date.Year, cp.Date.Month, 1, cp.Date.Hour, cp.Date.Minute, cp.Date.Second, DateTimeKind.Utc),
                       _ => cp.Date
                   })
-
 
                     .Select(g => new CryptoDataModel
                     {
